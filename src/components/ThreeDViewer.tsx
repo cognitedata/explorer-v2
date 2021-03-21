@@ -7,8 +7,8 @@ import {
 import { getCDFClient } from '../utils/auth';
 import { RevealNode3D, AssetMapping3D } from '@cognite/sdk';
 import { toast } from '@cognite/cogs.js';
-import { Box3 } from 'three';
-import { useThreeDMapping } from '../hooks/useThreeDMappings';
+import { Box3, Vector3 } from 'three';
+import { useThreeDMapping, useNodes } from '../hooks/useThreeDMappings';
 
 const sdkClient = getCDFClient();
 
@@ -19,7 +19,7 @@ export const ThreeDViewer = ({
   revisionId = 715061900296008,
   onSelect,
   selectedAssetIds = [],
-  visibleTreeIndexes = [],
+  nodeIds = [],
 }: {
   modelId?: number;
   revisionId?: number;
@@ -28,7 +28,7 @@ export const ThreeDViewer = ({
     mappings?: AssetMapping3D[];
   }) => void;
   selectedAssetIds?: number[]; // Asset id
-  visibleTreeIndexes?: number[];
+  nodeIds?: number[];
 }) => {
   const domElement = useRef<HTMLDivElement | null>(null);
 
@@ -41,6 +41,7 @@ export const ThreeDViewer = ({
     revisionId,
     selectedAssetIds
   );
+  const { data: nodes } = useNodes(modelId, revisionId, nodeIds);
 
   const onItemClicked = useCallback(
     async (
@@ -151,12 +152,14 @@ export const ThreeDViewer = ({
 
   useEffect(() => {
     (async () => {
-      if (viewer && model && visibleTreeIndexes.length > 0 && loading) {
+      if (viewer && model && nodes && nodes.length > 0 && loading) {
         let bbox: Box3 | undefined = undefined;
-        for (const treeIndex of visibleTreeIndexes) {
-          const currBox = await model.getBoundingBoxByTreeIndex(treeIndex);
+        for (const node of nodes) {
+          const currBox = new Box3(
+            new Vector3(...node.boundingBox.min),
+            new Vector3(...node.boundingBox.max)
+          );
           bbox = bbox ? bbox.union(currBox) : currBox;
-          await model.showNodeByTreeIndex(treeIndex, true);
         }
         if (bbox) {
           console.log('huh', bbox);
@@ -164,10 +167,13 @@ export const ThreeDViewer = ({
           await viewer.setSlicingPlanes(clipper.clippingPlanes);
           await viewer.fitCameraToBoundingBox(bbox);
         }
+        for (const node of nodes) {
+          await model.showNodeByTreeIndex(node.treeIndex, true);
+        }
         setLoading(false);
       }
     })();
-  }, [model, viewer, visibleTreeIndexes, loading]);
+  }, [model, viewer, nodes, loading]);
 
   return (
     <div style={{ height: '100%', width: '100%' }}>

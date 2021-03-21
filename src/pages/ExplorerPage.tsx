@@ -106,7 +106,7 @@ export const ExplorerPage = () => {
             revisionId={revisionId}
             onSelect={on3dSelect}
             selectedAssetIds={selectedAssetIds}
-            visibleTreeIndexes={mappings?.map((el) => el.treeIndex)}
+            nodeIds={mappings?.map((el) => el.nodeId)}
           />
         </div>
         <div>

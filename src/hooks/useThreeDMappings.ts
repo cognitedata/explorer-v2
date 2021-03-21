@@ -37,7 +37,7 @@ const getNodeData = async (
       `/api/v1/projects/akso-dev/3d/models/${modelId}/revisions/${revisionId}/nodes/byids`,
       {
         data: {
-          items: nodeIds.map(id=>({id})),
+          items: nodeIds.map((id) => ({ id })),
         },
       }
     );
@@ -57,6 +57,20 @@ export const useThreeDMapping = (
     async () => {
       return getAssetMappings(modelId, revisionId, assetIds);
     },
-    { staleTime: Infinity }
+    { staleTime: Infinity, enabled: assetIds.length > 0 }
+  );
+};
+
+export const useNodes = (
+  modelId: number,
+  revisionId: number,
+  treeIndexes: number[]
+) => {
+  return useQuery(
+    `nodes/${modelId}/${revisionId}/${treeIndexes.join(',')}`,
+    async () => {
+      return getNodeData(modelId, revisionId, treeIndexes);
+    },
+    { staleTime: Infinity, enabled: treeIndexes.length > 0 }
   );
 };
