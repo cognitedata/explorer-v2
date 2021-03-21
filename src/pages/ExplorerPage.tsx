@@ -2,7 +2,7 @@ import styled from 'styled-components/macro';
 import { ThreeDViewer } from '../components/ThreeDViewer';
 import { IDViewer } from '../components/IDViewer';
 import { DataViewer } from '../components/DataViewer';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Asset } from '@cognite/sdk/dist/src';
 import { useThreeDMapping } from '../hooks/useThreeDMappings';
 import {
@@ -63,25 +63,10 @@ export const ExplorerPage = () => {
         newAssetMapping[el.id] = el.parentId || el.rootId;
       });
       setAssets(innerAssets.concat(children));
+
       setAssetMapping(newAssetMapping);
     })();
   }, []);
-
-  const [mappedAssetIds] = useMemo(() => {
-    const mappedAssetIds = new Set<number>();
-    const unmappedAssetIds = new Set<number>();
-
-    assets.forEach((el) => {
-      unmappedAssetIds.add(el.id);
-    });
-
-    mappings?.forEach((el) => {
-      mappedAssetIds.add(el.assetId);
-      unmappedAssetIds.delete(el.assetId);
-    });
-
-    return [mappedAssetIds, unmappedAssetIds];
-  }, [mappings, assets]);
 
   const selectedAssetIds = useMemo(
     () =>
@@ -96,6 +81,22 @@ export const ExplorerPage = () => {
     [assetMapping, assetId]
   );
 
+  const on3dSelect = useCallback(
+    (data: any) => {
+      setData(data);
+      console.log('3d');
+      if (data.mappings) {
+        console.log(data.mappings, assetMapping, assets);
+        setAssetId(
+          Object.entries(assetMapping).find(([key]) =>
+            data.mappings?.some((el: any) => el.assetId === Number(key))
+          )![1] || undefined
+        );
+      }
+    },
+    [assetMapping, assets]
+  );
+
   return (
     <VerticalWrapper>
       <Wrapper>
@@ -103,13 +104,7 @@ export const ExplorerPage = () => {
           <ThreeDViewer
             modelId={modelId}
             revisionId={revisionId}
-            onSelect={(data) => {
-              setData(data);
-              console.log('3d');
-              if (data.mapping?.assetId) {
-                setAssetId(assetMapping[data.mapping.assetId]);
-              }
-            }}
+            onSelect={on3dSelect}
             selectedAssetIds={selectedAssetIds}
             visibleTreeIndexes={mappings?.map((el) => el.treeIndex)}
           />

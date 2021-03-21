@@ -8,6 +8,7 @@ import { getCDFClient } from '../utils/auth';
 import { RevealNode3D, AssetMapping3D } from '@cognite/sdk';
 import { toast } from '@cognite/cogs.js';
 import { Box3 } from 'three';
+import { useThreeDMapping } from '../hooks/useThreeDMappings';
 
 const sdkClient = getCDFClient();
 
@@ -17,12 +18,15 @@ export const ThreeDViewer = ({
   modelId = 2522841383870335,
   revisionId = 715061900296008,
   onSelect,
-  selectedAssetIds,
+  selectedAssetIds = [],
   visibleTreeIndexes = [],
 }: {
   modelId?: number;
   revisionId?: number;
-  onSelect: (data: { node?: RevealNode3D; mapping?: AssetMapping3D }) => void;
+  onSelect: (data: {
+    node?: RevealNode3D;
+    mappings?: AssetMapping3D[];
+  }) => void;
   selectedAssetIds?: number[]; // Asset id
   visibleTreeIndexes?: number[];
 }) => {
@@ -31,6 +35,12 @@ export const ThreeDViewer = ({
   const [viewer, setViewer] = useState<Cognite3DViewer | undefined>(undefined);
   const [model, setModel] = useState<Cognite3DModel | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
+
+  const { data: mappings } = useThreeDMapping(
+    modelId,
+    revisionId,
+    selectedAssetIds
+  );
 
   const onItemClicked = useCallback(
     async (
@@ -51,14 +61,14 @@ export const ThreeDViewer = ({
           const currentModel = intersection.model as Cognite3DModel;
 
           // do viewer stuff
+          console.log('select', treeIndex);
           await currentModel.selectNodeByTreeIndex(treeIndex);
 
           const nodeId = await currentModel.mapTreeIndexToNodeId(treeIndex);
 
-          const [mapping] = await sdkClient.assetMappings3D
+          const mappings = await sdkClient.assetMappings3D
             .list(currentModel.modelId!, currentModel.revisionId!, {
               nodeId,
-              limit: 1,
             })
             .autoPagingToArray();
           const [node] = await sdkClient.viewer3D
@@ -72,7 +82,7 @@ export const ThreeDViewer = ({
             )
             .autoPagingToArray();
           console.log('onclick 3d');
-          onSelect({ node, mapping });
+          onSelect({ node, mappings });
         }
       }
     },
@@ -98,27 +108,25 @@ export const ThreeDViewer = ({
           setViewer(newViewer);
           setModel(model as Cognite3DModel);
           (model as Cognite3DModel).hideAllNodes();
-          console.log('cgvhj');
-          newViewer!.on('click', (ev) => onItemClicked(newViewer!, ev));
           setLoading(true);
         });
     }
     return () => {};
-  }, [domElement, viewer, modelId, revisionId, onItemClicked]);
+  }, [domElement, viewer, modelId, revisionId]);
+
+  useEffect(() => {
+    let callback = (ev: any) => onItemClicked(newViewer!, ev);
+    if (viewer && onItemClicked) {
+      viewer!.on('click', callback);
+    }
+
+    return () => viewer?.off('click', callback);
+  });
 
   useEffect(() => {
     (async () => {
-      if (viewer && model && selectedAssetIds && selectedAssetIds?.length > 0) {
-        console.log(selectedAssetIds);
-        const mappings = await sdkClient.assetMappings3D
-          .list(model.modelId, model.revisionId, {
-            // @ts-ignore
-            assetIds: selectedAssetIds,
-          })
-          .autoPagingToArray();
-
+      if (viewer && model && mappings) {
         if (mappings.length > 0) {
-          console.log('deselectAllNodes 1');
           await model.deselectAllNodes();
           let bbox: Box3 | undefined = undefined;
           for (const mapping of mappings) {
@@ -126,10 +134,10 @@ export const ThreeDViewer = ({
               mapping.treeIndex
             );
             bbox = bbox ? bbox.union(currBox) : currBox;
-            await model.selectNodeByTreeIndex(mapping.treeIndex);
-            console.log(mapping.treeIndex);
+            await model.selectNodeByTreeIndex(mapping.treeIndex, true);
           }
           if (bbox) {
+            console.log('huh', bbox);
             await viewer.fitCameraToBoundingBox(bbox);
           }
         } else {
@@ -139,7 +147,7 @@ export const ThreeDViewer = ({
         }
       }
     })();
-  }, [viewer, model, selectedAssetIds]);
+  }, [viewer, model, mappings]);
 
   useEffect(() => {
     (async () => {
@@ -151,6 +159,7 @@ export const ThreeDViewer = ({
           await model.showNodeByTreeIndex(treeIndex, true);
         }
         if (bbox) {
+          console.log('huh', bbox);
           const clipper = new BoundingBoxClipper(bbox);
           await viewer.setSlicingPlanes(clipper.clippingPlanes);
           await viewer.fitCameraToBoundingBox(bbox);
