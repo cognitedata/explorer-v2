@@ -1,7 +1,6 @@
 import styled from 'styled-components/macro';
 import { ThreeDViewer } from '../components/ThreeDViewer';
 import { IDViewer } from '../components/IDViewer';
-import { DataViewer } from '../components/DataViewer';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Asset } from '@cognite/sdk/dist/src';
 import { useThreeDMapping } from '../hooks/useThreeDMappings';
@@ -102,7 +101,7 @@ export const ExplorerPage = () => {
     <VerticalWrapper>
       {assetId && (
         <Button
-          style={{ position: 'absolute', top: 24, left: 24, zIndex: 1000 }}
+          style={{ position: 'absolute', top: 24, left: 24, zIndex: 1 }}
           onClick={() => setAssetId(undefined)}
         >
           Deslect
@@ -127,6 +126,7 @@ export const ExplorerPage = () => {
                 setAssetId(assetMapping[data.resourceId!]);
               }
             }}
+            assets={assets}
             selectedAssetIds={selectedAssetIds}
             annotations={annotations}
           />
@@ -145,6 +145,7 @@ const Wrapper = styled.div`
   flex: 1;
   && > * {
     flex: 1;
+    position: relative;
   }
 `;
 const VerticalWrapper = styled.div`
