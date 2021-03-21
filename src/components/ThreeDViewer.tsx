@@ -123,6 +123,11 @@ export const ThreeDViewer = ({
 
     return () => viewer?.off('click', callback);
   });
+  useEffect(() => {
+    if (viewer && selectedAssetIds.length > 0) {
+      viewer.forceRerender();
+    }
+  }, [viewer, selectedAssetIds]);
 
   useEffect(() => {
     (async () => {
@@ -156,8 +161,16 @@ export const ThreeDViewer = ({
         let bbox: Box3 | undefined = undefined;
         for (const node of nodes) {
           const currBox = new Box3(
-            new Vector3(...node.boundingBox.min),
-            new Vector3(...node.boundingBox.max)
+            new Vector3(
+              node.boundingBox.min[0],
+              node.boundingBox.min[2],
+              node.boundingBox.min[1] * -1
+            ),
+            new Vector3(
+              node.boundingBox.max[0],
+              node.boundingBox.max[2],
+              node.boundingBox.max[1] * -1
+            )
           );
           bbox = bbox ? bbox.union(currBox) : currBox;
         }

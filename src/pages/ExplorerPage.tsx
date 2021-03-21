@@ -10,6 +10,7 @@ import {
   listAnnotationsForFile,
 } from '@cognite/annotations';
 import { getCDFClient } from '../utils/auth';
+import { Button } from '@cognite/cogs.js';
 
 const modelId = 2522841383870335;
 const revisionId = 715061900296008;
@@ -18,7 +19,7 @@ const fileId = 724490490485823;
 const sdkClient = getCDFClient();
 
 export const ExplorerPage = () => {
-  const [data, setData] = useState<any>({});
+  // const [data, setData] = useState<any>({});
   const [assetId, setAssetId] = useState<number | undefined>(undefined);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [assetMapping, setAssetMapping] = useState<{ [key: number]: number }>(
@@ -83,7 +84,7 @@ export const ExplorerPage = () => {
 
   const on3dSelect = useCallback(
     (data: any) => {
-      setData(data);
+      // setData(data);
       console.log('3d');
       if (data.mappings) {
         console.log(data.mappings, assetMapping, assets);
@@ -99,8 +100,16 @@ export const ExplorerPage = () => {
 
   return (
     <VerticalWrapper>
+      {assetId && (
+        <Button
+          style={{ position: 'absolute', top: 24, left: 24, zIndex: 1000 }}
+          onClick={() => setAssetId(undefined)}
+        >
+          Deslect
+        </Button>
+      )}
       <Wrapper>
-        <div>
+        <div style={{ flex: !!assetId ? '1' : '0' }}>
           <ThreeDViewer
             modelId={modelId}
             revisionId={revisionId}
@@ -112,7 +121,7 @@ export const ExplorerPage = () => {
         <div>
           <IDViewer
             onSelect={(data) => {
-              setData(data);
+              // setData(data);
               console.log('id');
               if (data?.resourceType === 'asset') {
                 setAssetId(assetMapping[data.resourceId!]);
@@ -123,9 +132,9 @@ export const ExplorerPage = () => {
           />
         </div>
       </Wrapper>
-      <div style={{ height: '20vw', overflow: 'auto' }}>
+      {/* <div style={{ height: '20vw', overflow: 'auto' }}>
         <DataViewer data={data} />
-      </div>
+      </div> */}
     </VerticalWrapper>
   );
 };
