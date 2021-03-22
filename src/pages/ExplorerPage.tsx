@@ -143,6 +143,7 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: row;
   flex: 1;
+  overflow: hidden;
   && > * {
     flex: 1;
     position: relative;

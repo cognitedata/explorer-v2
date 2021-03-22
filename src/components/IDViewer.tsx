@@ -53,8 +53,18 @@ export const IDViewer = ({
   }
   return (
     <>
-      <div style={{ position: 'absolute', top: 24, left: 24, zIndex: 2 }}>
-        <Body level={3}>Color by</Body>
+      <div
+        style={{
+          position: 'absolute',
+          top: 24,
+          left: 24,
+          zIndex: 2,
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}
+      >
+        <Body style={{ marginRight: 12 }}>Color by</Body>
         <ButtonGroup currentKey={tab} onButtonClicked={setTab}>
           <ButtonGroup.Button key="default">Default</ButtonGroup.Button>
           <ButtonGroup.Button key="objectstate">

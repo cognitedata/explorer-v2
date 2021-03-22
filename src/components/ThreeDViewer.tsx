@@ -99,6 +99,15 @@ export const ThreeDViewer = ({
       // load a model and add it on 3d scene
       // https://console.cognitedata.com/publicdata/3d-models/4715379429968321/revisions/5688854005909501
 
+      console.log(newViewer.cadBudget);
+
+      //@ts-ignore
+      newViewer.cadBudget.highDetailProximityThreshold = 20;
+      //@ts-ignore
+      newViewer.cadBudget.maximumNumberOfDrawCalls = 2000;
+      //@ts-ignore
+      newViewer.cadBudget.geometryDownloadSizeBytes = 6000000;
+
       newViewer
         .addModel({
           modelId,
@@ -134,18 +143,17 @@ export const ThreeDViewer = ({
       if (viewer && model && mappings) {
         if (mappings.length > 0) {
           await model.deselectAllNodes();
-          let bbox: Box3 | undefined = undefined;
+          // let bbox: Box3 | undefined = undefined;
           for (const mapping of mappings) {
-            const currBox = await model.getBoundingBoxByTreeIndex(
-              mapping.treeIndex
-            );
-            bbox = bbox ? bbox.union(currBox) : currBox;
+            // const currBox = await model.getBoundingBoxByTreeIndex(
+            //   mapping.treeIndex
+            // );
+            // bbox = bbox ? bbox.union(currBox) : currBox;
             await model.selectNodeByTreeIndex(mapping.treeIndex, true);
           }
-          if (bbox) {
-            console.log('huh', bbox);
-            await viewer.fitCameraToBoundingBox(bbox);
-          }
+          // if (bbox) {
+          //   await viewer.fitCameraToBoundingBox(bbox);
+          // }
         } else {
           toast.info(<p>Unable to find 3D mapping for asset</p>, {
             autoClose: 3000,
@@ -175,7 +183,6 @@ export const ThreeDViewer = ({
           bbox = bbox ? bbox.union(currBox) : currBox;
         }
         if (bbox) {
-          console.log('huh', bbox);
           const clipper = new BoundingBoxClipper(bbox);
           await viewer.setSlicingPlanes(clipper.clippingPlanes);
           await viewer.fitCameraToBoundingBox(bbox);
