@@ -9,7 +9,8 @@ import {
   listAnnotationsForFile,
 } from '@cognite/annotations';
 import { getCDFClient } from '../utils/auth';
-import { Button } from '@cognite/cogs.js';
+import { Button, Title } from '@cognite/cogs.js';
+import { DataViewer } from '../components/DataViewer';
 
 const modelId = 2522841383870335;
 const revisionId = 715061900296008;
@@ -18,7 +19,7 @@ const fileId = 724490490485823;
 const sdkClient = getCDFClient();
 
 export const ExplorerPage = () => {
-  // const [data, setData] = useState<any>({});
+  const [data, setData] = useState<Asset | undefined>(undefined);
   const [assetId, setAssetId] = useState<number | undefined>(undefined);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [assetMapping, setAssetMapping] = useState<{ [key: number]: number }>(
@@ -83,15 +84,15 @@ export const ExplorerPage = () => {
 
   const on3dSelect = useCallback(
     (data: any) => {
-      // setData(data);
       console.log('3d');
       if (data.mappings) {
         console.log(data.mappings, assetMapping, assets);
-        setAssetId(
+        const assetId =
           Object.entries(assetMapping).find(([key]) =>
             data.mappings?.some((el: any) => el.assetId === Number(key))
-          )![1] || undefined
-        );
+          )![1] || undefined;
+        setAssetId(assetId);
+        setData(assets.find((el) => el.id === assetId));
       }
     },
     [assetMapping, assets]
@@ -108,22 +109,37 @@ export const ExplorerPage = () => {
         </Button>
       )}
       <Wrapper>
-        <div style={{ flex: !!assetId ? '1' : '0' }}>
-          <ThreeDViewer
-            modelId={modelId}
-            revisionId={revisionId}
-            onSelect={on3dSelect}
-            selectedAssetIds={selectedAssetIds}
-            nodeIds={mappings?.map((el) => el.nodeId)}
-          />
+        <div
+          style={{
+            flex: !!assetId ? '1' : '0',
+            width: !!assetId ? 'auto' : '0',
+          }}
+        >
+          <div style={{ flex: 1, display: 'flex' }}>
+            <ThreeDViewer
+              modelId={modelId}
+              revisionId={revisionId}
+              onSelect={on3dSelect}
+              selectedAssetIds={selectedAssetIds}
+              nodeIds={mappings?.map((el) => el.nodeId)}
+            />
+          </div>
+          {data && (
+            <div style={{ height: '20vw', overflow: 'auto' }}>
+              <Title level={3}>{data.name} Details</Title>
+              <DataViewer data={data} />
+            </div>
+          )}
         </div>
         <div>
           <IDViewer
             onSelect={(data) => {
-              // setData(data);
               console.log('id');
               if (data?.resourceType === 'asset') {
                 setAssetId(assetMapping[data.resourceId!]);
+                setData(
+                  assets.find((el) => el.id === assetMapping[data.resourceId!])
+                );
               }
             }}
             assets={assets}
@@ -132,9 +148,6 @@ export const ExplorerPage = () => {
           />
         </div>
       </Wrapper>
-      {/* <div style={{ height: '20vw', overflow: 'auto' }}>
-        <DataViewer data={data} />
-      </div> */}
     </VerticalWrapper>
   );
 };
@@ -147,6 +160,8 @@ const Wrapper = styled.div`
   && > * {
     flex: 1;
     position: relative;
+    display: flex;
+    flex-direction: column;
   }
 `;
 const VerticalWrapper = styled.div`

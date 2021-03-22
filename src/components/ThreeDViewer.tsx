@@ -102,11 +102,7 @@ export const ThreeDViewer = ({
       console.log(newViewer.cadBudget);
 
       //@ts-ignore
-      newViewer.cadBudget.highDetailProximityThreshold = 20;
-      //@ts-ignore
-      newViewer.cadBudget.maximumNumberOfDrawCalls = 2000;
-      //@ts-ignore
-      newViewer.cadBudget.geometryDownloadSizeBytes = 6000000;
+      newViewer.cadBudget.highDetailProximityThreshold = 25;
 
       newViewer
         .addModel({
