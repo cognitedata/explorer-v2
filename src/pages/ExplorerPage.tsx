@@ -124,12 +124,10 @@ export const ExplorerPage = () => {
               nodeIds={mappings?.map((el) => el.nodeId)}
             />
           </div>
-          {data && (
-            <div style={{ height: '20vw', overflow: 'auto' }}>
-              <Title level={3}>{data.name} Details</Title>
-              <DataViewer data={data} />
-            </div>
-          )}
+          <div style={{ height: '20vw', overflow: 'auto' }}>
+            <Title level={3}>{data?.name} Details</Title>
+            <DataViewer data={data || {}} />
+          </div>
         </div>
         <div>
           <IDViewer
